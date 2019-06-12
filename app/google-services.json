@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "76242465148",
+    "firebase_url": "https://record-insurance.firebaseio.com",
+    "project_id": "record-insurance",
+    "storage_bucket": "record-insurance.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:76242465148:android:e89c6a5847baa3c6",
+        "android_client_info": {
+          "package_name": "org.esigelec.recordinsurance"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "76242465148-kecb9gc9l57831j3471imv7mgkjl9p6s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.esigelec.recordinsurance",
+            "certificate_hash": "0e55757a03f068483a0472a9c52767f693ddb268"
+          }
+        },
+        {
+          "client_id": "76242465148-mvg0nkfls92084jm49dt5cuj5u8etcqn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6LGDyqtsStV-yZSA__DzzX5ljVIe-Jyw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "76242465148-mvg0nkfls92084jm49dt5cuj5u8etcqn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
