@@ -69,7 +69,7 @@ public class Util {
         for(int i=1000000;i<millis*1000;i+=5000000)
         {
             Bitmap bitmap=retriever.getFrameAtTime(i,MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
-            rev.add(bitmap);
+            rev.add(Bitmap.createScaledBitmap(bitmap, 240, 240, false));
         }
 
         return rev;

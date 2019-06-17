@@ -55,7 +55,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class Camera2VideoFragment extends Fragment
-        implements View.OnClickListener, FragmentCompat.OnRequestPermissionsResultCallback {
+        implements View.OnClickListener, FragmentCompat.OnRequestPermissionsResultCallback, MediaRecorder.OnInfoListener {
 
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     private static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
@@ -134,59 +134,7 @@ public class Camera2VideoFragment extends Fragment
 
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
-            /*if (mIsRecordingVideo && usingLbp) {
 
-                if (countFrame == SKIP_FRAME) {
-                    countFrame = 0;
-                    Bitmap original = Bitmap.createBitmap(mTextureView.getWidth(), mTextureView.getHeight(), Bitmap.Config.ARGB_8888);
-                    mTextureView.getBitmap(original);
-
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    original.compress(Bitmap.CompressFormat.PNG, 50, out);
-                    Bitmap frame = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));
-
-                    Log.e("Original   dimensions", original.getWidth()+" "+ original.getHeight());
-                    Log.e("Compressed dimensions", frame.getWidth()+" "+ frame.getHeight());
-
-
-                    StringBuilder sb = new StringBuilder();
-                    int[][] imageArray = new int[frame.getWidth()][frame.getHeight()];
-                    int currentPixelValue, newPixelValue;
-
-                    for(int row=0; row < frame.getWidth(); row++){
-                        for(int col=0; col < frame.getHeight(); col++){
-
-                            imageArray[row][col]= frame.getPixel(row,col);
-                        }
-                    }
-
-                    for(int row=1; row<frame.getWidth()-1; row++){
-                        for(int col=1; col<frame.getHeight()-1; col++){
-                            currentPixelValue=imageArray[row][col];
-                            newPixelValue=0;
-                            if(imageArray[row-1][col-1]>currentPixelValue) newPixelValue=newPixelValue+1;
-                            if(imageArray[row-1][col]>currentPixelValue) newPixelValue=newPixelValue+2;
-                            if(imageArray[row-1][col+1]>currentPixelValue) newPixelValue=newPixelValue+4;
-                            if(imageArray[row][col+1]>currentPixelValue) newPixelValue=newPixelValue+8;
-                            if(imageArray[row+1][col+1]>currentPixelValue) newPixelValue=newPixelValue+16;
-                            if(imageArray[row+1][col]>currentPixelValue) newPixelValue=newPixelValue+32;
-                            if(imageArray[row+1][col-1]>currentPixelValue) newPixelValue=newPixelValue+64;
-                            if(imageArray[row][col-1]>currentPixelValue) newPixelValue=newPixelValue+128;
-                            sb.append(newPixelValue);
-                        }
-                    }
-                    sb.append(System.lineSeparator());
-                    try {
-                        fos.write(sb.toString().getBytes());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                } else {
-                    countFrame++;
-                }
-
-            }*/
         }
 
     };
@@ -372,7 +320,7 @@ public class Camera2VideoFragment extends Fragment
         switch (view.getId()) {
             case R.id.video: {
                 if (mIsRecordingVideo) {
-                    stopRecordingVideo();
+                    stopRecordingVideo(false);
                     mChronometer.stop();
                     mChronometer.setVisibility(View.INVISIBLE);
                 } else {
@@ -660,6 +608,8 @@ public class Camera2VideoFragment extends Fragment
         mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        mMediaRecorder.setMaxDuration(5000);
+        mMediaRecorder.setOnInfoListener(this);
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
         switch (mSensorOrientation) {
             case SENSOR_ORIENTATION_DEFAULT_DEGREES:
@@ -696,7 +646,6 @@ public class Camera2VideoFragment extends Fragment
 
         try {
             startLbp();
-            startThreadSign();
             closePreviewSession();
             setUpMediaRecorder();
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
@@ -758,28 +707,6 @@ public class Camera2VideoFragment extends Fragment
 
     }
 
-    private void startThreadSign() {
-        //function to process the method each 5 seg
-       /* handler = new Handler();
-        int delay = 5000; //milliseconds
-
-        handler.postDelayed(new Runnable(){
-
-            int start = 1000000;
-
-            public void run(){
-
-                try {
-                    processVideo.processFileLbpContinuasly(getActivity(), mNextVideoAbsolutePath, start);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                start += 5000000;
-
-                handler.postDelayed(this, delay);
-            }
-        }, delay);*/
-    }
 
     private void closePreviewSession() {
         if (mPreviewSession != null) {
@@ -788,7 +715,7 @@ public class Camera2VideoFragment extends Fragment
         }
     }
 
-    private void stopRecordingVideo() {
+    private void stopRecordingVideo(Boolean isContinuously) {
 
         if (fos != null) {
             try {
@@ -799,20 +726,13 @@ public class Camera2VideoFragment extends Fragment
         }
         // UI
         mIsRecordingVideo = false;
-        mButtonVideo.setText(R.string.record);
+        if (!isContinuously)
+            mButtonVideo.setText(R.string.record);
 
         // Stop recording
         mMediaRecorder.stop();
         mMediaRecorder.reset();
 
-       //handler.removeCallbacksAndMessages(null);
-
-        Activity activity = getActivity();
-        if (null != activity) {
-            Toast.makeText(activity, "Video saved: " + mNextVideoAbsolutePath,
-                    Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "Video saved: " + mNextVideoAbsolutePath);
-        }
         getActivity().sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(mNextVideoAbsolutePath))));
 
 
@@ -827,6 +747,17 @@ public class Camera2VideoFragment extends Fragment
         startPreview();
 
 
+    }
+
+    @Override
+    public void onInfo(MediaRecorder mr, int what, int extra) {
+        if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
+
+            stopRecordingVideo(true);
+
+            startRecordingVideo();
+
+        }
     }
 
     /**

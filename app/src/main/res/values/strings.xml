@@ -3,7 +3,7 @@
 <resources>
     <string name="app_name">Record Insurance</string>
     <string name="title_activity_upload">Upload</string>
-    <string name="app_train">Upload</string>
+    <string name="app_train">Check Integrity</string>
     <string name="app_record">Record</string>
 
     <string name="record">Record</string>
